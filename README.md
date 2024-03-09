@@ -10,6 +10,7 @@
 ## Features
 
 - Grid layout
+- Translate
 - Search in book
 - Image preview
 - Custom typography

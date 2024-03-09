@@ -53,7 +53,7 @@ export default {
   'settings.synchronization.unauthorize': '取消授权',
   'settings.cache': '缓存',
   'settings.cache.clear': '清除',
-
+  'menu.translate': '翻译',
   'menu.copy': '复制',
   'menu.search_in_book': '书内搜索',
   'menu.annotate': '标注',

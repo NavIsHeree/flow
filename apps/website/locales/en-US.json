@@ -25,14 +25,15 @@
   "features": {
     "title": "Features",
     "list": {
-      "0": "Search in book",
-      "1": "Image preview",
-      "2": "Custom typography",
-      "3": "Highlight and Annotation",
-      "4": "Theme",
-      "5": "Share/Download book with link",
-      "6": "Data export",
-      "7": "Cloud storage"
+      "0": "Translate",
+      "1": "Search in book",
+      "2": "Image preview",
+      "3": "Custom typography",
+      "4": "Highlight and Annotation",
+      "5": "Theme",
+      "6": "Share/Download book with link",
+      "7": "Data export",
+      "8": "Cloud storage"
     }
   },
   "feature": {
