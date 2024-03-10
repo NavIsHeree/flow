@@ -6,6 +6,7 @@ import {
   MdCopyAll,
   MdOutlineAddBox,
   MdOutlineEdit,
+  MdOutlineGTranslate,
   MdOutlineIndeterminateCheckBox,
   MdSearch,
 } from 'react-icons/md'
@@ -207,7 +208,7 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
             />
             <IconButton
               title={t('Translate')}
-              Icon={MdSearch}
+              Icon={MdOutlineGTranslate}
               size={ICON_SIZE}
               onClick={() => {
                 hide()
