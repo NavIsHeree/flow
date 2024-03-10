@@ -1,7 +1,7 @@
-import { Overlay } from '@literal-ui/core'
-import clsx from 'clsx'
-import { useCallback, useRef, useState } from 'react'
-import FocusLock from 'react-focus-lock'
+import { Overlay } from '@literal-ui/core';
+import clsx from 'clsx';
+import { useCallback, useRef, useState } from 'react';
+import FocusLock from 'react-focus-lock';
 import {
   MdCopyAll,
   MdOutlineAddBox,
@@ -9,10 +9,9 @@ import {
   MdOutlineGTranslate,
   MdOutlineIndeterminateCheckBox,
   MdSearch,
-} from 'react-icons/md'
-import { useSnapshot } from 'valtio'
-
-import { typeMap, colorMap } from '../annotation'
+} from 'react-icons/md';
+import { useSnapshot } from 'valtio';
+import { typeMap, colorMap } from '../annotation';
 import {
   isForwardSelection,
   useMobile,
@@ -20,57 +19,54 @@ import {
   useTextSelection,
   useTranslation,
   useTypography,
-} from '../hooks'
-import { BookTab } from '../models'
-import { isTouchScreen, scale } from '../platform'
-import { copy, keys, last } from '../utils'
+} from '../hooks';
+import { BookTab } from '../models';
+import { isTouchScreen, scale } from '../platform';
+import { copy, keys, last } from '../utils';
+import { Button, IconButton } from './Button';
+import { TextField } from './Form';
+import { layout, LayoutAnchorMode, LayoutAnchorPosition } from './base';
 
-import { Button, IconButton } from './Button'
-import { TextField } from './Form'
-import { layout, LayoutAnchorMode, LayoutAnchorPosition } from './base'
+// Import a TranslationPopup component if you have one, or create a new component for this purpose
+import TranslationPopup from './TranslationPopup';
 
 interface TextSelectionMenuProps {
-  tab: BookTab
+  tab: BookTab;
 }
+
 export const TextSelectionMenu: React.FC<TextSelectionMenuProps> = ({
   tab,
 }) => {
-  const { rendition, annotationRange } = useSnapshot(tab)
+  const { rendition, annotationRange } = useSnapshot(tab);
 
-  // `manager` is not reactive, so we need to use getter
   const view = useCallback(() => {
-    return rendition?.manager?.views._views[0]
-  }, [rendition])
+    return rendition?.manager?.views._views[0];
+  }, [rendition]);
 
-  const win = view()?.window
-  const [selection, setSelection] = useTextSelection(win)
+  const win = view()?.window;
+  const [selection, setSelection] = useTextSelection(win);
 
-  const el = view()?.element as HTMLElement
-  if (!el) return null
+  const el = view()?.element as HTMLElement;
+  if (!el) return null;
 
-  // it is possible that both `selection` and `tab.annotationRange`
-  // are set when select end within an annotation
-  const range = selection?.getRangeAt(0) ?? annotationRange
-  if (!range) return null
+  const range = selection?.getRangeAt(0) ?? annotationRange;
+  if (!range) return null;
 
-  // prefer to display above the selection to avoid text selection helpers
-  // https://stackoverflow.com/questions/68081757/hide-the-two-text-selection-helpers-in-mobile-browsers
   const forward = isTouchScreen
     ? false
     : selection
     ? isForwardSelection(selection)
-    : true
+    : true;
 
-  const rects = [...range.getClientRects()].filter((r) => Math.round(r.width))
-  const anchorRect = rects && (forward ? last(rects) : rects[0])
-  if (!anchorRect) return null
+  const rects = [...range.getClientRects()].filter((r) => Math.round(r.width));
+  const anchorRect = rects && (forward ? last(rects) : rects[0]);
+  if (!anchorRect) return null;
 
-  const contents = range.cloneContents()
-  const text = contents.textContent?.trim()
-  if (!text) return null
+  const contents = range.cloneContents();
+  const text = contents.textContent?.trim();
+  if (!text) return null;
 
   return (
-    // to reset inner state
     <TextSelectionMenuRenderer
       tab={tab}
       range={range as Range}
@@ -81,33 +77,31 @@ export const TextSelectionMenu: React.FC<TextSelectionMenuProps> = ({
       forward={forward}
       hide={() => {
         if (selection) {
-          selection.removeAllRanges()
-          setSelection(undefined)
+          selection.removeAllRanges();
+          setSelection(undefined);
         }
-        /**
-         * {@link range}
-         */
         if (tab.annotationRange) {
-          tab.annotationRange = undefined
+          tab.annotationRange = undefined;
         }
       }}
     />
-  )
-}
+  );
+};
 
-const ICON_SIZE = scale(22, 28)
-const ANNOTATION_SIZE = scale(24, 30)
+const ICON_SIZE = scale(22, 28);
+const ANNOTATION_SIZE = scale(24, 30);
 
 interface TextSelectionMenuRendererProps {
-  tab: BookTab
-  range: Range
-  anchorRect: DOMRect
-  containerRect: DOMRect
-  viewRect: DOMRect
-  text: string
-  forward: boolean
-  hide: () => void
+  tab: BookTab;
+  range: Range;
+  anchorRect: DOMRect;
+  containerRect: DOMRect;
+  viewRect: DOMRect;
+  text: string;
+  forward: boolean;
+  hide: () => void;
 }
+
 const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
   tab,
   range,
@@ -118,68 +112,70 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
   text,
   hide,
 }) => {
-  const setAction = useSetAction()
-  const ref = useRef<HTMLInputElement>(null)
-  const [width, setWidth] = useState(0)
-  const [height, setHeight] = useState(0)
-  const mobile = useMobile()
-  const t = useTranslation('menu')
+  const setAction = useSetAction();
+  const ref = useRef<HTMLInputElement>(null);
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+  const mobile = useMobile();
+  const t = useTranslation('menu');
+  const [showTranslationPopup, setShowTranslationPopup] = useState(false);
 
-  const cfi = tab.rangeToCfi(range)
-  const annotation = tab.book.annotations.find((a) => a.cfi === cfi)
-  const [annotate, setAnnotate] = useState(!!annotation)
+  const cfi = tab.rangeToCfi(range);
+  const annotation = tab.book.annotations.find((a) => a.cfi === cfi);
+  const [annotate, setAnnotate] = useState(!!annotation);
 
   const position = forward
     ? LayoutAnchorPosition.Before
-    : LayoutAnchorPosition.After
+    : LayoutAnchorPosition.After;
 
-  const { zoom } = useTypography(tab)
-  const endContainer = forward ? range.endContainer : range.startContainer
+  const { zoom } = useTypography(tab);
+  const endContainer = forward ? range.endContainer : range.startContainer;
   const _lineHeight = parseFloat(
-    getComputedStyle(endContainer.parentElement!).lineHeight,
-  )
-  // no custom line height and the origin is keyword, e.g. 'normal'.
+    getComputedStyle(endContainer.parentElement!).lineHeight
+  );
   const lineHeight = isNaN(_lineHeight)
     ? anchorRect.height
-    : _lineHeight * (zoom ?? 1)
+    : _lineHeight * (zoom ?? 1);
 
   return (
     <FocusLock disabled={mobile}>
       <Overlay
-        // cover `sash`
         className="!z-50 !bg-transparent"
         onMouseDown={hide}
       />
       <div
         ref={(el) => {
-          if (!el) return
-          setWidth(el.clientWidth)
-          setHeight(el.clientHeight)
+          if (!el) return;
+          setWidth(el.clientWidth);
+          setHeight(el.clientHeight);
           if (!mobile) {
-            el.focus()
+            el.focus();
           }
         }}
         className={clsx(
-          'bg-surface text-on-surface-variant shadow-1 absolute z-50 p-2 focus:outline-none',
+          'bg-surface text-on-surface-variant shadow-1 absolute z-50 p-2 focus:outline-none'
         )}
         style={{
           left: layout(containerRect.width, width, {
-            offset: anchorRect.left + viewRect.left - containerRect.left,
+            offset:
+              anchorRect.left + viewRect.left - containerRect.left,
             size: anchorRect.width,
             mode: LayoutAnchorMode.ALIGN,
             position,
           }),
           top: layout(containerRect.height, height, {
-            offset: anchorRect.top - (lineHeight - anchorRect.height) / 2,
+            offset:
+              anchorRect.top -
+              (lineHeight - anchorRect.height) / 2,
             size: lineHeight,
             position,
           }),
         }}
         tabIndex={-1}
         onKeyDown={(e) => {
-          e.stopPropagation()
+          e.stopPropagation();
           if (e.key === 'c' && e.ctrlKey) {
-            copy(text)
+            copy(text);
           }
         }}
       >
@@ -202,8 +198,8 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
               Icon={MdCopyAll}
               size={ICON_SIZE}
               onClick={() => {
-                hide()
-                copy(text)
+                hide();
+                copy(text);
               }}
             />
             <IconButton
@@ -211,9 +207,8 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
               Icon={MdOutlineGTranslate}
               size={ICON_SIZE}
               onClick={() => {
-                hide()
-                setAction('search')
-                tab.setKeyword(text)
+                hide();
+                setShowTranslationPopup(true);
               }}
             />
             <IconButton
@@ -221,9 +216,9 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
               Icon={MdSearch}
               size={ICON_SIZE}
               onClick={() => {
-                hide()
-                setAction('search')
-                tab.setKeyword(text)
+                hide();
+                setAction('search');
+                tab.setKeyword(text);
               }}
             />
             <IconButton
@@ -231,7 +226,7 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
               Icon={MdOutlineEdit}
               size={ICON_SIZE}
               onClick={() => {
-                setAnnotate(true)
+                setAnnotate(true);
               }}
             />
             {tab.isDefined(text) ? (
@@ -240,8 +235,8 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
                 Icon={MdOutlineIndeterminateCheckBox}
                 size={ICON_SIZE}
                 onClick={() => {
-                  hide()
-                  tab.undefine(text)
+                  hide();
+                  tab.undefine(text);
                 }}
               />
             ) : (
@@ -250,8 +245,8 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
                 Icon={MdOutlineAddBox}
                 size={ICON_SIZE}
                 onClick={() => {
-                  hide()
-                  tab.define([text])
+                  hide();
+                  tab.define([text]);
                 }}
               />
             )}
@@ -271,7 +266,7 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
                   }}
                   className={clsx(
                     'typescale-body-large text-on-surface-variant flex cursor-pointer items-center justify-center',
-                    typeMap[type].class,
+                    typeMap[type].class
                   )}
                   onClick={() => {
                     tab.putAnnotation(
@@ -279,9 +274,9 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
                       cfi,
                       color,
                       text,
-                      ref.current?.value,
-                    )
-                    hide()
+                      ref.current?.value
+                    );
+                    hide();
                   }}
                 >
                   A
@@ -297,8 +292,8 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
                 compact
                 variant="secondary"
                 onClick={() => {
-                  tab.removeAnnotation(cfi)
-                  hide()
+                  tab.removeAnnotation(cfi);
+                  hide();
                 }}
               >
                 {t('delete')}
@@ -313,9 +308,9 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
                   cfi,
                   annotation?.color ?? 'yellow',
                   text,
-                  ref.current?.value,
-                )
-                hide()
+                  ref.current?.value
+                );
+                hide();
               }}
             >
               {t(annotation ? 'update' : 'create')}
@@ -323,6 +318,12 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
           </div>
         )}
       </div>
+      {showTranslationPopup && (
+        <TranslationPopup
+          text={text}
+          onClose={() => setShowTranslationPopup(false)}
+        />
+      )}
     </FocusLock>
-  )
-}
+  );
+};
