@@ -206,6 +206,16 @@ const TextSelectionMenuRenderer: React.FC<TextSelectionMenuRendererProps> = ({
               }}
             />
             <IconButton
+              title={t('Translate')}
+              Icon={MdSearch}
+              size={ICON_SIZE}
+              onClick={() => {
+                hide()
+                setAction('search')
+                tab.setKeyword(text)
+              }}
+            />
+            <IconButton
               title={t('search_in_book')}
               Icon={MdSearch}
               size={ICON_SIZE}
